@@ -1,71 +1,243 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HeartSpace – Feel Better</title>
-<style>
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        text-align: center;
-        background: linear-gradient(to right, #ffdde1, #ee9ca7);
-        color: #fff;
-        margin: 0;
-        padding: 20px;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HeartSpace — Offline Chat & Mood</title>
+  <style>
+    :root{
+      --bg:linear-gradient(180deg,#fffafc,#f0f7ff);
+      --card:#ffffff;
+      --accent:#ff6f91;
+      --muted:#6b7280;
+      --radius:12px;
+      --maxw:900px;
     }
-    h1 {
-        font-size: 2.5em;
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; background:var(--bg); color:#0b1220}
+    .app{max-width:var(--maxw); margin:18px auto; padding:16px}
+    header{text-align:center}
+    h1{margin:0;font-size:28px;color:var(--accent)}
+    p.sub{color:var(--muted); margin:6px 0 0 0}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px}
+    .card{background:var(--card); padding:14px; border-radius:var(--radius); box-shadow:0 8px 20px rgba(15,23,42,0.06)}
+    .mood-buttons{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+    .mood-buttons button{font-size:22px;padding:10px;border-radius:10px;border:1px solid #f0f0f0;background:#fff;cursor:pointer}
+    textarea{width:100%; padding:10px; border-radius:8px;border:1px solid #e6e6e6; margin-top:8px; min-height:60px}
+    .row{display:flex; gap:8px; margin-top:10px; align-items:center}
+    .primary{background:var(--accent); color:#fff; border:none; padding:9px 12px; border-radius:10px; cursor:pointer}
+    .muted{background:#f3f4f6; color:var(--muted); border:none; padding:9px 12px; border-radius:10px; cursor:pointer}
+    .feedback{margin-top:8px; color:green}
+    .history{margin-top:10px; max-height:220px; overflow:auto; padding-right:6px}
+    .entry{padding:8px; border-radius:8px; background:#fbfbff; margin-bottom:8px}
+    .time{font-size:12px; color:var(--muted)}
+    .chat-window{height:300px; overflow:auto; border:1px solid #eee; padding:8px; border-radius:8px; background:#fbfbff}
+    .msg{margin-bottom:10px}
+    .msg .who{font-weight:700}
+    .user .who{color:#0b1220}
+    .bot .who{color:var(--accent)}
+    footer{ text-align:center; margin-top:14px; color:var(--muted); font-size:13px }
+    /* mobile */
+    @media (max-width:880px){
+      .grid{grid-template-columns:1fr; }
+      .chat-window{height:220px}
     }
-    .music-section {
-        margin-top: 30px;
-    }
-    .track {
-        margin: 20px;
-        background: rgba(255,255,255,0.2);
-        padding: 15px;
-        border-radius: 15px;
-    }
-    audio {
-        width: 100%;
-        outline: none;
-    }
-</style>
+  </style>
 </head>
 <body>
+  <div class="app">
+    <header>
+      <h1>HeartSpace</h1>
+      <p class="sub">A gentle, private place to track moods and talk — no sign up required.</p>
+    </header>
 
-<h1>💖 HeartSpace – Your Safe Place</h1>
-<p>Relax, breathe, and enjoy some soothing tunes.</p>
+    <main class="grid">
+      <section class="card">
+        <h2>How are you feeling today?</h2>
+        <div class="mood-buttons" id="moodButtons">
+          <button data-mood="happy">😊</button>
+          <button data-mood="okay">🙂</button>
+          <button data-mood="sad">😔</button>
+          <button data-mood="anxious">😰</button>
+          <button data-mood="angry">😡</button>
+          <button data-mood="tired">😴</button>
+        </div>
 
-<div class="music-section">
-    <div class="track">
-        <h3>🌊 Ocean Waves</h3>
-        <audio controls>
-            <source src="https://www.example.com/ocean.mp3" type="audio/mp3">
-            Your browser does not support the audio element.
-        </audio>
-    </div>
-    <div class="track">
-        <h3>🌿 Forest Ambience</h3>
-        <audio controls>
-            <source src="https://www.example.com/forest.mp3" type="audio/mp3">
-            Your browser does not support the audio element.
-        </audio>
-    </div>
-    <div class="track">
-        <h3>🎹 Soft Piano</h3>
-        <audio controls>
-            <source src="https://www.example.com/piano.mp3" type="audio/mp3">
-            Your browser does not support the audio element.
-        </audio>
-    </div>
-    <div class="track">
-        <h3>🔥 Campfire Nights</h3>
-        <audio controls>
-            <source src="https://www.example.com/campfire.mp3" type="audio/mp3">
-            Your browser does not support the audio element.
-        </audio>
-    </div>
-</div>
+        <textarea id="moodNote" placeholder="Add a short note (optional)"></textarea>
+        <div class="row">
+          <button id="saveMood" class="primary">Save Mood</button>
+          <button id="viewHistory" class="muted">View History</button>
+          <div id="moodFeedback" style="margin-left:auto;color:green"></div>
+        </div>
 
+        <div id="history" class="history" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <h2>Talk — Gentle AI Friend</h2>
+        <div id="chatWindow" class="chat-window" aria-live="polite"></div>
+        <textarea id="chatInput" placeholder="Type what you'd like to share..."></textarea>
+        <div class="row">
+          <button id="sendChat" class="primary">Send</button>
+          <button id="clearChat" class="muted">Clear Chat</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <small>HeartSpace is supportive but not a replacement for professional help. If you're in crisis, contact local emergency services.</small>
+    </footer>
+  </div>
+
+  <script>
+    // ---------- Mood Tracker (localStorage) ----------
+    const moodButtons = document.getElementById('moodButtons');
+    const moodNote = document.getElementById('moodNote');
+    const saveMood = document.getElementById('saveMood');
+    const viewHistory = document.getElementById('viewHistory');
+    const historyEl = document.getElementById('history');
+    const moodFeedback = document.getElementById('moodFeedback');
+
+    let selectedMood = null;
+    moodButtons.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', ()=>{
+        selectedMood = btn.dataset.mood;
+        moodButtons.querySelectorAll('button').forEach(b => b.style.outline = 'none');
+        btn.style.outline = '3px solid rgba(255,111,145,0.2)';
+      })
+    });
+
+    function readMoods(){
+      try {
+        const raw = localStorage.getItem('heartspace_moods') || '[]';
+        return JSON.parse(raw);
+      } catch(e){ return []; }
+    }
+    function saveMoods(arr){
+      localStorage.setItem('heartspace_moods', JSON.stringify(arr));
+    }
+
+    saveMood.addEventListener('click', ()=>{
+      if(!selectedMood){ moodFeedback.innerText='Please pick a mood first.'; setTimeout(()=>moodFeedback.innerText='',2500); return; }
+      const note = moodNote.value || '';
+      const items = readMoods();
+      items.unshift({ mood: selectedMood, note: note, ts: Date.now() });
+      saveMoods(items.slice(0,200)); // keep 200 recent
+      moodNote.value = '';
+      selectedMood = null;
+      moodButtons.querySelectorAll('button').forEach(b => b.style.outline='none');
+      moodFeedback.innerText = 'Saved — thank you for checking in.';
+      setTimeout(()=>moodFeedback.innerText='',3000);
+    });
+
+    viewHistory.addEventListener('click', renderHistory);
+
+    function renderHistory(){
+      const items = readMoods();
+      if(items.length === 0){ historyEl.innerHTML = '<div style="color:#6b7280">No mood history yet.</div>'; return; }
+      historyEl.innerHTML = items.map(it => {
+        const d = new Date(it.ts).toLocaleString();
+        const note = it.note ? `<div style="margin-top:6px;color:#3b3b3b">${escapeHtml(it.note)}</div>` : '';
+        return `<div class="entry"><div class="time">${d}</div><div style="font-size:18px;margin-top:6px">${escapeHtml(it.mood)}</div>${note}</div>`;
+      }).join('');
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; });
+    }
+
+    // ---------- Chat (canned offline replies) ----------
+    const chatWindow = document.getElementById('chatWindow');
+    const chatInput = document.getElementById('chatInput');
+    const sendChat = document.getElementById('sendChat');
+    const clearChat = document.getElementById('clearChat');
+
+    // load chat from localStorage so it persists
+    function readChat(){ try { return JSON.parse(localStorage.getItem('heartspace_chat')||'[]'); } catch(e){ return []; } }
+    function saveChat(arr){ localStorage.setItem('heartspace_chat', JSON.stringify(arr)); }
+
+    function renderChat(){
+      const msgs = readChat();
+      chatWindow.innerHTML = msgs.map(m => chatHtml(m.who, m.text)).join('');
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function chatHtml(who, text){
+      const whoLabel = who === 'user' ? 'You' : 'Friend';
+      return `<div class="msg ${who}"><div class="who">${whoLabel}</div><div>${escapeHtml(text)}</div></div>`;
+    }
+
+    function appendChat(who, text){
+      const msgs = readChat();
+      msgs.push({who, text, ts: Date.now()});
+      saveChat(msgs.slice(-400)); // cap
+      renderChat();
+    }
+
+    sendChat.addEventListener('click', async ()=>{
+      const text = chatInput.value.trim();
+      if(!text) return;
+      appendChat('user', text);
+      chatInput.value = '';
+      appendChat('bot', '...thinking');
+      // simulate processing delay
+      setTimeout(()=> {
+        // remove the last thinking message and replace with reply
+        let msgs = readChat();
+        // find last bot '...thinking' and replace
+        for(let i=msgs.length-1;i>=0;i--){
+          if(msgs[i].who==='bot' && msgs[i].text==='...thinking'){ msgs.splice(i,1); break; }
+        }
+        // produce reply via simple heuristics (canned)
+        const reply = generateReply(text);
+        msgs.push({who:'bot', text:reply, ts: Date.now()});
+        saveChat(msgs.slice(-400));
+        renderChat();
+      }, 700);
+    });
+
+    clearChat.addEventListener('click', ()=>{
+      if(confirm('Clear chat history?')){ saveChat([]); renderChat(); }
+    });
+
+    function generateReply(message){
+      const m = message.toLowerCase();
+      // pattern matching for more personalised feeling
+      if(/(sad|depress|unhappy|miserable|lonely)/.test(m)){
+        return "I'm really sorry you're feeling sad. I'm here to listen — would you like to tell me more about what's weighing on you?";
+      }
+      if(/(anx|anxiety|panic|scared|nerv)/.test(m)){
+        return "That sounds very stressful. Try breathing slowly with me: inhale for 4, hold for 4, exhale for 6. Would you like to try?";
+      }
+      if(/(angry|mad|frustrat)/.test(m)){
+        return "Anger can be heavy. It's okay to feel that way. Can you name one thing that would make this moment a bit easier?";
+      }
+      if(/(tired|exhaust|sleep)/.test(m)){
+        return "Feeling tired wears on us. Is there a small rest or soothing activity you can do right now? A short break helps sometimes.";
+      }
+      if(/(help|advice|what should i do|suggest)/.test(m)){
+        return "I can offer ideas and gentle suggestions. If you'd like, describe the situation a bit and I'll share a few options.";
+      }
+      // friendly default
+      const defaults = [
+        "Thank you for sharing. That sounds important. What helped you even a little before?",
+        "I hear you — it's okay to feel that way. Would you like a quick grounding exercise?",
+        "You're not alone. If it helps, tell me one small detail about your day."
+      ];
+      return defaults[Math.floor(Math.random()*defaults.length)];
+    }
+
+    // initial render
+    renderHistory();
+    renderChat();
+
+    // support pressing Enter to send (Shift+Enter for newline)
+    chatInput.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat.click(); }
+    });
+
+    // accessibility: focus chat input on load
+    chatInput.focus();
+  </script>
 </body>
 </html>
