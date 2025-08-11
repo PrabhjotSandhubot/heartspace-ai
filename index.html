@@ -1,243 +1,569 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>HeartSpace — Offline Chat & Mood</title>
-  <style>
-    :root{
-      --bg:linear-gradient(180deg,#fffafc,#f0f7ff);
-      --card:#ffffff;
-      --accent:#ff6f91;
-      --muted:#6b7280;
-      --radius:12px;
-      --maxw:900px;
-    }
-    *{box-sizing:border-box}
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; background:var(--bg); color:#0b1220}
-    .app{max-width:var(--maxw); margin:18px auto; padding:16px}
-    header{text-align:center}
-    h1{margin:0;font-size:28px;color:var(--accent)}
-    p.sub{color:var(--muted); margin:6px 0 0 0}
-    .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px}
-    .card{background:var(--card); padding:14px; border-radius:var(--radius); box-shadow:0 8px 20px rgba(15,23,42,0.06)}
-    .mood-buttons{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
-    .mood-buttons button{font-size:22px;padding:10px;border-radius:10px;border:1px solid #f0f0f0;background:#fff;cursor:pointer}
-    textarea{width:100%; padding:10px; border-radius:8px;border:1px solid #e6e6e6; margin-top:8px; min-height:60px}
-    .row{display:flex; gap:8px; margin-top:10px; align-items:center}
-    .primary{background:var(--accent); color:#fff; border:none; padding:9px 12px; border-radius:10px; cursor:pointer}
-    .muted{background:#f3f4f6; color:var(--muted); border:none; padding:9px 12px; border-radius:10px; cursor:pointer}
-    .feedback{margin-top:8px; color:green}
-    .history{margin-top:10px; max-height:220px; overflow:auto; padding-right:6px}
-    .entry{padding:8px; border-radius:8px; background:#fbfbff; margin-bottom:8px}
-    .time{font-size:12px; color:var(--muted)}
-    .chat-window{height:300px; overflow:auto; border:1px solid #eee; padding:8px; border-radius:8px; background:#fbfbff}
-    .msg{margin-bottom:10px}
-    .msg .who{font-weight:700}
-    .user .who{color:#0b1220}
-    .bot .who{color:var(--accent)}
-    footer{ text-align:center; margin-top:14px; color:var(--muted); font-size:13px }
-    /* mobile */
-    @media (max-width:880px){
-      .grid{grid-template-columns:1fr; }
-      .chat-window{height:220px}
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>HeartSpace — Your Safe Place</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --maxw:1100px;
+    --accent1:#FF6FA3;
+    --accent2:#FFD76B;
+    --muted:#6b7280;
+    --card: rgba(255,255,255,0.92);
+    --glass: rgba(255,255,255,0.12);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%; margin:0; font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto; -webkit-font-smoothing:antialiased;}
+  body{
+    background:linear-gradient(120deg,#fceabb,#f8b500);
+    transition:background 700ms ease;
+    color:#063046;
+  }
+  .wrap{max-width:var(--maxw); margin:18px auto; padding:14px;}
+  header{display:flex; justify-content:space-between; align-items:center; gap:12px}
+  h1{margin:0;font-weight:600}
+  .subtitle{color:var(--muted); font-size:0.95rem}
+  main{display:grid; grid-template-columns: 1fr 380px; gap:16px; margin-top:14px}
+  @media(max-width:920px){ main{ grid-template-columns: 1fr; } .music-float{ position:static; transform:none; margin-top:10px } }
+
+  /* Cards */
+  .card{background:var(--card); border-radius:var(--radius); padding:12px; box-shadow:0 10px 30px rgba(3,32,60,0.08);}
+  .section-title{font-weight:600;margin-bottom:8px}
+
+  /* Mood checkin */
+  .mood-row{display:flex; gap:8px; flex-wrap:wrap}
+  .mood-btn{background:transparent;border:1px solid rgba(6,48,70,0.06); padding:10px 12px;border-radius:12px; font-size:18px; cursor:pointer; transition:transform .18s, box-shadow .18s}
+  .mood-btn.selected{box-shadow:0 8px 24px rgba(0,0,0,0.08); transform:translateY(-4px)}
+  textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(6,48,70,0.06); resize:vertical; font-family:inherit}
+
+  /* chat / vent */
+  .chat-window{height:200px; overflow:auto; padding:8px; border-radius:10px; background:linear-gradient(180deg,#f2fbff,#ffffff); border:1px solid rgba(6,48,70,0.04)}
+  .msg{margin-bottom:10px}
+  .msg .who{font-weight:700; font-size:0.9rem}
+  .msg.user{text-align:right}
+  .bubble{display:inline-block; padding:8px 12px; border-radius:12px; max-width:85%}
+  .bubble.user{background:var(--accent1); color:white}
+  .bubble.bot{background:#eef7ff;color:#0b2a3a}
+
+  /* breathing */
+  .breath-center{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .circle{width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#ffffffcc,#ffffff44); transition:transform 3s ease;}
+  .breathing .circle{ animation: breathe 6s ease-in-out infinite; }
+  @keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.28)} }
+
+  /* grounding steps */
+  .ground-list{display:flex;flex-direction:column;gap:8px}
+
+  /* quotes */
+  .quotes{display:grid;gap:8px}
+
+  /* journal */
+  .journal-list{max-height:160px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+
+  /* insights + chart */
+  canvas{width:100%; height:160px; display:block}
+
+  /* music floating */
+  .music-float{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:999;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.96);padding:8px 12px;border-radius:999px;box-shadow:0 14px 30px rgba(3,32,60,0.12)}
+  .music-float select,input[type=range]{margin-left:8px}
+
+  /* buttons */
+  .row{display:flex;gap:8px;align-items:center}
+  .btn{background:linear-gradient(90deg,var(--accent1),var(--accent2));border:none;color:white;padding:8px 12px;border-radius:10px;cursor:pointer;box-shadow:0 8px 20px rgba(255,111,145,0.14);transition:transform .15s}
+  .btn:hover{transform:scale(1.03)}
+  .btn.ghost{background:transparent;color:#063046;border:1px solid rgba(6,48,70,0.06)}
+
+  /* small text */
+  .muted{color:var(--muted);font-size:0.9rem}
+  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:0.85rem}
+
+</style>
 </head>
 <body>
-  <div class="app">
-    <header>
+
+<div class="wrap">
+  <header>
+    <div>
       <h1>HeartSpace</h1>
-      <p class="sub">A gentle, private place to track moods and talk — no sign up required.</p>
-    </header>
+      <div class="subtitle">How is your heart today? — Your safe, private companion</div>
+    </div>
+    <div class="muted">Local & private • No sign-in required</div>
+  </header>
 
-    <main class="grid">
-      <section class="card">
-        <h2>How are you feeling today?</h2>
-        <div class="mood-buttons" id="moodButtons">
-          <button data-mood="happy">😊</button>
-          <button data-mood="okay">🙂</button>
-          <button data-mood="sad">😔</button>
-          <button data-mood="anxious">😰</button>
-          <button data-mood="angry">😡</button>
-          <button data-mood="tired">😴</button>
+  <main>
+    <!-- left column -->
+    <div>
+      <!-- Heart Check-in -->
+      <div class="card" id="checkinCard" aria-live="polite">
+        <div class="section-title">Heart Check-in</div>
+        <div class="muted">Tap an emoji to log how you're feeling</div>
+        <div class="mood-row" id="moodButtons" style="margin-top:10px">
+          <button class="mood-btn" data-key="happy" data-emoji="😊">😊 Happy</button>
+          <button class="mood-btn" data-key="okay" data-emoji="🙂">🙂 Okay</button>
+          <button class="mood-btn" data-key="sad" data-emoji="😔">😔 Sad</button>
+          <button class="mood-btn" data-key="anxious" data-emoji="😰">😰 Anxious</button>
+          <button class="mood-btn" data-key="angry" data-emoji="😡">😡 Angry</button>
         </div>
-
-        <textarea id="moodNote" placeholder="Add a short note (optional)"></textarea>
-        <div class="row">
-          <button id="saveMood" class="primary">Save Mood</button>
-          <button id="viewHistory" class="muted">View History</button>
-          <div id="moodFeedback" style="margin-left:auto;color:green"></div>
+        <textarea id="moodNote" placeholder="Write a short note (optional)"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="saveMoodBtn">Save Check-in</button>
+          <button class="btn ghost" id="viewMoodHistoryBtn">View History</button>
+          <div id="checkinFeedback" style="margin-left:auto;font-weight:600;color:#063046"></div>
         </div>
+      </div>
 
-        <div id="history" class="history" aria-live="polite"></div>
-      </section>
-
-      <section class="card">
-        <h2>Talk — Gentle AI Friend</h2>
-        <div id="chatWindow" class="chat-window" aria-live="polite"></div>
-        <textarea id="chatInput" placeholder="Type what you'd like to share..."></textarea>
-        <div class="row">
-          <button id="sendChat" class="primary">Send</button>
-          <button id="clearChat" class="muted">Clear Chat</button>
+      <!-- Vent Mode (Talk it Out) -->
+      <div class="card" style="margin-top:12px">
+        <div class="section-title">Talk it Out — Private Journal</div>
+        <div class="muted">Write freely — this is saved locally only.</div>
+        <textarea id="ventInput" rows="5" placeholder="Write whatever is on your mind..."></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="saveVentBtn">Save Vent (Private)</button>
+          <button class="btn ghost" id="clearVentsBtn">Clear Vents</button>
         </div>
-      </section>
-    </main>
+        <div class="journal-list" id="ventList" style="margin-top:10px"></div>
+      </div>
 
-    <footer>
-      <small>HeartSpace is supportive but not a replacement for professional help. If you're in crisis, contact local emergency services.</small>
-    </footer>
+      <!-- Calming Mode + Breathing -->
+      <div class="card" style="margin-top:12px">
+        <div class="section-title">Find Peace — Gentle breathing & grounding</div>
+        <div class="muted">A guided breathing exercise and grounding tools</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px">
+          <div style="flex:1;min-width:220px">
+            <div class="breath-center" id="breathBox">
+              <div class="circle" id="breathCircle"></div>
+              <div id="breathInstruction" style="font-weight:700;color:#063046">Ready to breathe?</div>
+              <div class="row" style="margin-top:8px">
+                <button class="btn" id="startBreathBtn">Start 1-min breathing</button>
+                <button class="btn ghost" id="stopBreathBtn">Stop</button>
+              </div>
+            </div>
+          </div>
+          <div style="flex:1;min-width:220px">
+            <div style="margin-bottom:8px;font-weight:700">5-4-3-2-1 Grounding technique</div>
+            <div class="ground-list">
+              <div><strong>5</strong> — Name five things you can see</div>
+              <div><strong>4</strong> — Name four things you can touch</div>
+              <div><strong>3</strong> — Name three things you can hear</div>
+              <div><strong>2</strong> — Name two things you can smell</div>
+              <div><strong>1</strong> — Name one thing you can taste (or one thing you like)</div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <button class="btn" id="startGroundBtn">Start Grounding Walkthrough</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat (gentle AI fallback local) -->
+      <div class="card" style="margin-top:12px">
+        <div class="section-title">Talk — Gentle AI Friend</div>
+        <div class="muted">You can type here and get supportive, non-medical replies (offline canned or, if you add an API later, routed to OpenAI).</div>
+        <div class="chat-window" id="chatWindow"></div>
+        <textarea id="chatInput" rows="2" placeholder="Share what's on your heart..."></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="sendChatBtn">Send</button>
+          <button class="btn ghost" id="clearChatBtn">Clear Chat</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- right column -->
+    <aside>
+      <!-- Daily Affirmation & Quote -->
+      <div class="card">
+        <div class="section-title">Daily Affirmation</div>
+        <div id="dailyAff" style="font-weight:700;font-size:1.05rem;color:#063046">You're doing the best you can today.</div>
+        <div style="margin-top:8px">
+          <div class="muted">Quote of the moment</div>
+          <div id="quoteBox" style="margin-top:8px;font-weight:600;color:#063046">"Small steps are still forward."</div>
+          <div class="row" style="margin-top:10px;justify-content:flex-end">
+            <button class="btn ghost" id="newAffBtn">Inspire Me</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress & Insights -->
+      <div class="card" style="margin-top:12px">
+        <div class="section-title">Progress & Insights</div>
+        <canvas id="moodChart" width="400" height="160" style="background:transparent;border-radius:8px"></canvas>
+        <div style="margin-top:8px" id="insightsBox"></div>
+      </div>
+
+      <!-- Resources & Crisis Support -->
+      <div class="card" style="margin-top:12px">
+        <div class="section-title">You're Not Alone — Resources</div>
+        <div class="muted">If you're in immediate danger, call your local emergency number.</div>
+        <ul style="margin-top:8px">
+          <li><strong>US:</strong> 988 — Suicide & Crisis Lifeline</li>
+          <li><strong>UK:</strong> Samaritans 116 123</li>
+          <li><strong>India:</strong> KIRAN 1800-599-0019</li>
+          <li><strong>International:</strong> <a href="https://www.opencounseling.com/suicide-hotlines" target="_blank" rel="noreferrer">Find local helplines</a></li>
+        </ul>
+        <div style="margin-top:8px">
+          <button class="btn" id="crisisQuickBtn">Call/Find Help Now</button>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <footer class="muted">HeartSpace is for support and comfort. It is not a replacement for professional help.</footer>
+</div>
+
+<!-- Floating Music Controls -->
+<div class="music-float" id="musicFloat" style="display:none">
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="btn" id="playToggle">Play</button>
+    <label style="font-weight:700;color:#063046">Soundscape</label>
+    <select id="trackSelect" style="padding:6px;border-radius:8px">
+      <option value="0">Calm Piano</option>
+      <option value="1">Ocean Waves</option>
+      <option value="2">Rain Ambience</option>
+      <option value="3">Morning Birds</option>
+    </select>
+    <label style="margin-left:8px;color:#063046">Vol</label>
+    <input id="volRange" type="range" min="0" max="100" value="50">
   </div>
+  <div id="equalizer" style="display:flex;gap:4px;margin-left:12px">
+    <div style="width:6px;background:#ff6fa3;height:12px;border-radius:3px;transition:height 120ms"></div>
+    <div style="width:6px;background:#ff9f80;height:10px;border-radius:3px;transition:height 120ms"></div>
+    <div style="width:6px;background:#ffd480;height:18px;border-radius:3px;transition:height 120ms"></div>
+    <div style="width:6px;background:#7be4b8;height:8px;border-radius:3px;transition:height 120ms"></div>
+    <div style="width:6px;background:#90c5ff;height:14px;border-radius:3px;transition:height 120ms"></div>
+  </div>
+</div>
 
-  <script>
-    // ---------- Mood Tracker (localStorage) ----------
-    const moodButtons = document.getElementById('moodButtons');
-    const moodNote = document.getElementById('moodNote');
-    const saveMood = document.getElementById('saveMood');
-    const viewHistory = document.getElementById('viewHistory');
-    const historyEl = document.getElementById('history');
-    const moodFeedback = document.getElementById('moodFeedback');
+<script>
+/* ---------------------------
+   Simple HeartSpace Client JS
+   All data stored locally in localStorage for privacy
+   --------------------------- */
 
-    let selectedMood = null;
-    moodButtons.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', ()=>{
-        selectedMood = btn.dataset.mood;
-        moodButtons.querySelectorAll('button').forEach(b => b.style.outline = 'none');
-        btn.style.outline = '3px solid rgba(255,111,145,0.2)';
-      })
-    });
+/* localStorage keys */
+const LS = {
+  MOODS: 'hs_moods_v3',
+  VENTS: 'hs_vents_v3',
+  CHAT: 'hs_chat_v3',
+  GRATS: 'hs_grats_v3',
+  MUSIC: 'hs_music_v3',
+  AFF: 'hs_aff_v3'
+};
 
-    function readMoods(){
-      try {
-        const raw = localStorage.getItem('heartspace_moods') || '[]';
-        return JSON.parse(raw);
-      } catch(e){ return []; }
-    }
-    function saveMoods(arr){
-      localStorage.setItem('heartspace_moods', JSON.stringify(arr));
-    }
+/* Utility */
+function read(key, d=[]){ try{ return JSON.parse(localStorage.getItem(key) || JSON.stringify(d)); }catch(e){ return d; } }
+function write(key,v){ localStorage.setItem(key, JSON.stringify(v)); }
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showTemp(msg, elId, ms=2200){ const el=document.getElementById(elId); if(!el) return; el.innerText=msg; setTimeout(()=>{ if(el.innerText===msg) el.innerText=''; }, ms); }
 
-    saveMood.addEventListener('click', ()=>{
-      if(!selectedMood){ moodFeedback.innerText='Please pick a mood first.'; setTimeout(()=>moodFeedback.innerText='',2500); return; }
-      const note = moodNote.value || '';
-      const items = readMoods();
-      items.unshift({ mood: selectedMood, note: note, ts: Date.now() });
-      saveMoods(items.slice(0,200)); // keep 200 recent
-      moodNote.value = '';
-      selectedMood = null;
-      moodButtons.querySelectorAll('button').forEach(b => b.style.outline='none');
-      moodFeedback.innerText = 'Saved — thank you for checking in.';
-      setTimeout(()=>moodFeedback.innerText='',3000);
-    });
+/* ---------------------------
+   Init & Welcome
+   --------------------------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // hide welcome after a moment and reveal music controls
+  setTimeout(()=> { document.getElementById('welcome')?.remove(); document.getElementById('musicFloat').style.display='flex'; initUI(); }, 1500);
+});
 
-    viewHistory.addEventListener('click', renderHistory);
+/* ---------------------------
+   Mood Check-in
+   --------------------------- */
+let selectedMood = null;
+document.getElementById('moodButtons').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.mood-btn'); if(!btn) return;
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedMood = { key: btn.dataset.key, emoji: btn.dataset.emoji };
+});
 
-    function renderHistory(){
-      const items = readMoods();
-      if(items.length === 0){ historyEl.innerHTML = '<div style="color:#6b7280">No mood history yet.</div>'; return; }
-      historyEl.innerHTML = items.map(it => {
-        const d = new Date(it.ts).toLocaleString();
-        const note = it.note ? `<div style="margin-top:6px;color:#3b3b3b">${escapeHtml(it.note)}</div>` : '';
-        return `<div class="entry"><div class="time">${d}</div><div style="font-size:18px;margin-top:6px">${escapeHtml(it.mood)}</div>${note}</div>`;
-      }).join('');
-    }
+document.getElementById('saveMoodBtn').addEventListener('click', ()=>{
+  if(!selectedMood){ showTemp('Please select an emoji first', 'checkinFeedback'); return; }
+  const note = (document.getElementById('moodNote').value||'').trim();
+  const arr = read(LS.MOODS, []);
+  arr.unshift({key:selectedMood.key, emoji:selectedMood.emoji, note, ts: Date.now()});
+  write(LS.MOODS, arr.slice(0,500));
+  document.getElementById('moodNote').value='';
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected')); selectedMood=null;
+  showTemp('Saved — thank you for checking in.', 'checkinFeedback', 2500);
+  updateChart();
+});
 
-    function escapeHtml(s){
-      return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; });
-    }
+/* View mood history */
+document.getElementById('viewMoodHistoryBtn').addEventListener('click', ()=>{
+  const items = read(LS.MOODS, []);
+  if(items.length===0){ alert('No mood history yet.'); return; }
+  const list = items.slice(0,30).map(it=> `${new Date(it.ts).toLocaleString()} — ${it.emoji} ${it.key} ${it.note?(' — '+it.note):''}`).join('\\n\\n');
+  alert('Recent check-ins:\\n\\n' + list);
+});
 
-    // ---------- Chat (canned offline replies) ----------
-    const chatWindow = document.getElementById('chatWindow');
-    const chatInput = document.getElementById('chatInput');
-    const sendChat = document.getElementById('sendChat');
-    const clearChat = document.getElementById('clearChat');
+/* ---------------------------
+   Vent / Private Journal
+   --------------------------- */
+function renderVents(){ const list = read(LS.VENTS,[]); const root = document.getElementById('ventList'); root.innerHTML=''; list.slice().reverse().forEach(v=>{ const d = document.createElement('div'); d.className='journal-entry'; d.style.background='linear-gradient(180deg,#ffffff,#f7f7ff)'; d.style.padding='8px'; d.style.borderRadius='8px'; d.style.marginBottom='6px'; d.innerHTML = `<div style="font-size:12px;color:${'#6b7280'}">${new Date(v.ts).toLocaleString()}</div><div style="margin-top:6px">${escapeHtml(v.text)}</div>`; root.appendChild(d); }) }
+document.getElementById('saveVentBtn').addEventListener('click', ()=>{
+  const t = (document.getElementById('ventInput').value||'').trim(); if(!t) return;
+  const arr = read(LS.VENTS,[]); arr.push({text:t, ts: Date.now()}); write(LS.VENTS, arr.slice(-500));
+  document.getElementById('ventInput').value=''; renderVents(); showTemp('Saved privately', 'checkinFeedback', 1600);
+});
+document.getElementById('clearVentsBtn').addEventListener('click', ()=>{ if(confirm('Clear all vents?')){ write(LS.VENTS,[]); renderVents(); } });
+renderVents();
 
-    // load chat from localStorage so it persists
-    function readChat(){ try { return JSON.parse(localStorage.getItem('heartspace_chat')||'[]'); } catch(e){ return []; } }
-    function saveChat(arr){ localStorage.setItem('heartspace_chat', JSON.stringify(arr)); }
+/* ---------------------------
+   Chat (local canned replies)
+   --------------------------- */
+function renderChat(){ const msgs = read(LS.CHAT,[]); const win = document.getElementById('chatWindow'); win.innerHTML=''; msgs.forEach(m=>{ const d = document.createElement('div'); d.className = 'msg ' + (m.who==='user'?'user':'bot'); d.innerHTML = `<div class="who">${m.who==='user'?'You':'Friend'}</div><div class="bubble ${m.who==='user'?'user':'bot'}" style="margin-top:6px">${escapeHtml(m.text)}</div>`; win.appendChild(d); }); win.scrollTop = win.scrollHeight; }
+function appendChat(who,text){ const msgs = read(LS.CHAT,[]); msgs.push({who,text,ts:Date.now()}); write(LS.CHAT,msgs.slice(-500)); renderChat(); }
+document.getElementById('sendChatBtn').addEventListener('click', ()=>{ const t=(document.getElementById('chatInput').value||'').trim(); if(!t) return; appendChat('user', t); document.getElementById('chatInput').value=''; appendChat('bot','...thinking'); setTimeout(()=>{ let msgs=read(LS.CHAT,[]); for(let i=msgs.length-1;i>=0;i--){ if(msgs[i].who==='bot' && msgs[i].text==='...thinking'){ msgs.splice(i,1); break; } } const reply = cannedReply(t); msgs.push({who:'bot', text:reply, ts:Date.now()}); write(LS.CHAT,msgs.slice(-500)); renderChat(); },700); });
+document.getElementById('clearChatBtn').addEventListener('click', ()=>{ if(confirm('Clear chat history?')){ write(LS.CHAT,[]); renderChat(); } });
+function cannedReply(message){
+  const m = message.toLowerCase();
+  if(/(sad|depress|lonely|hopeless)/.test(m)) return "I'm sorry you're feeling that. I hear you — if you'd like, tell me one small detail about your day.";
+  if(/(anx|panic|scared|nerv)/.test(m)) return "That sounds hard. Try breathing in for 4, hold 4, out 6. Want to try together?";
+  if(/(angry|mad|frustrat)/.test(m)) return "Anger is valid. Can you name one small thing that might ease this moment?";
+  const defaults = ["Thank you for sharing — that was brave.","You're not alone. What helped you even a tiny bit before?","Small steps can make a difference. What's one small step you can do now?"];
+  return defaults[Math.floor(Math.random()*defaults.length)];
+}
+renderChat();
 
-    function renderChat(){
-      const msgs = readChat();
-      chatWindow.innerHTML = msgs.map(m => chatHtml(m.who, m.text)).join('');
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
+/* ---------------------------
+   Breathing exercise
+   --------------------------- */
+let breatheActive=false, breatheTimer=null;
+document.getElementById('startBreathBtn').addEventListener('click', ()=>{ if(breatheActive) return; breatheActive=true; document.getElementById('breathBox').classList.add('breathing'); runBreath(); });
+document.getElementById('stopBreathBtn').addEventListener('click', stopBreath);
+function runBreath(){
+  const steps = [ {txt:'Breathe in', ms:4000}, {txt:'Hold', ms:4000}, {txt:'Breathe out', ms:6000}, {txt:'Hold', ms:2000} ];
+  let idx=0;
+  function step(){
+    if(!breatheActive) return;
+    const s = steps[idx%steps.length]; document.getElementById('breathInstruction').innerText = s.txt;
+    idx++; breatheTimer = setTimeout(step, s.ms);
+  }
+  step();
+}
+function stopBreath(){ breatheActive=false; document.getElementById('breathBox').classList.remove('breathing'); if(breatheTimer) clearTimeout(breatheTimer); document.getElementById('breathInstruction').innerText='Ready to breathe?'; }
 
-    function chatHtml(who, text){
-      const whoLabel = who === 'user' ? 'You' : 'Friend';
-      return `<div class="msg ${who}"><div class="who">${whoLabel}</div><div>${escapeHtml(text)}</div></div>`;
-    }
+/* Grounding walkthrough (simple prompts) */
+document.getElementById('startGroundBtn').addEventListener('click', ()=>{
+  const steps = [
+    'Look around and name five things you can see.',
+    'Now name four things you can touch.',
+    'Now name three things you can hear.',
+    'Now name two things you can smell.',
+    'Now name one thing you can taste or one thing you like.'
+  ];
+  let i=0;
+  function showStep(){
+    if(i>=steps.length) return alert('Grounding complete — how do you feel now?');
+    const ans = prompt(steps[i]);
+    i++; setTimeout(()=>showStep(),200);
+  }
+  showStep();
+});
 
-    function appendChat(who, text){
-      const msgs = readChat();
-      msgs.push({who, text, ts: Date.now()});
-      saveChat(msgs.slice(-400)); // cap
-      renderChat();
-    }
+/* ---------------------------
+   Daily affirmation & quotes
+   --------------------------- */
+const affirmations = [
+  "You're doing the best you can today.",
+  "Take one breath at a time.",
+  "Small steps are still progress.",
+  "You matter and your feelings matter."
+];
+const quotes = [
+  "This too shall pass.",
+  "Inhale strength, exhale doubt.",
+  "You are more resilient than you know.",
+  "Caring for yourself is a radical act."
+];
+function newAff(){
+  const a = affirmations[Math.floor(Math.random()*affirmations.length)];
+  const q = quotes[Math.floor(Math.random()*quotes.length)];
+  document.getElementById('dailyAff').innerText = a;
+  document.getElementById('quoteBox').innerText = `"${q}"`;
+  write(LS.AFF, {a,q,ts:Date.now()});
+}
+document.getElementById('newAffBtn').addEventListener('click', newAff);
+const savedAff = read(LS.AFF, null); if(savedAff && savedAff.a) { document.getElementById('dailyAff').innerText = savedAff.a; document.getElementById('quoteBox').innerText = `"${savedAff.q}"`; } else newAff();
 
-    sendChat.addEventListener('click', async ()=>{
-      const text = chatInput.value.trim();
-      if(!text) return;
-      appendChat('user', text);
-      chatInput.value = '';
-      appendChat('bot', '...thinking');
-      // simulate processing delay
-      setTimeout(()=> {
-        // remove the last thinking message and replace with reply
-        let msgs = readChat();
-        // find last bot '...thinking' and replace
-        for(let i=msgs.length-1;i>=0;i--){
-          if(msgs[i].who==='bot' && msgs[i].text==='...thinking'){ msgs.splice(i,1); break; }
-        }
-        // produce reply via simple heuristics (canned)
-        const reply = generateReply(text);
-        msgs.push({who:'bot', text:reply, ts: Date.now()});
-        saveChat(msgs.slice(-400));
-        renderChat();
-      }, 700);
-    });
+/* ---------------------------
+   Gratitude (reusing vents structure) not separate here (optional)
+   --------------------------- */
+// (we used vents and grat can be added - skip to keep UI focused)
 
-    clearChat.addEventListener('click', ()=>{
-      if(confirm('Clear chat history?')){ saveChat([]); renderChat(); }
-    });
+/* ---------------------------
+   Insights & Chart (simple canvas)
+   --------------------------- */
+const chartCanvas = document.getElementById('moodChart');
+const ctx = chartCanvas.getContext('2d');
 
-    function generateReply(message){
-      const m = message.toLowerCase();
-      // pattern matching for more personalised feeling
-      if(/(sad|depress|unhappy|miserable|lonely)/.test(m)){
-        return "I'm really sorry you're feeling sad. I'm here to listen — would you like to tell me more about what's weighing on you?";
-      }
-      if(/(anx|anxiety|panic|scared|nerv)/.test(m)){
-        return "That sounds very stressful. Try breathing slowly with me: inhale for 4, hold for 4, exhale for 6. Would you like to try?";
-      }
-      if(/(angry|mad|frustrat)/.test(m)){
-        return "Anger can be heavy. It's okay to feel that way. Can you name one thing that would make this moment a bit easier?";
-      }
-      if(/(tired|exhaust|sleep)/.test(m)){
-        return "Feeling tired wears on us. Is there a small rest or soothing activity you can do right now? A short break helps sometimes.";
-      }
-      if(/(help|advice|what should i do|suggest)/.test(m)){
-        return "I can offer ideas and gentle suggestions. If you'd like, describe the situation a bit and I'll share a few options.";
-      }
-      // friendly default
-      const defaults = [
-        "Thank you for sharing. That sounds important. What helped you even a little before?",
-        "I hear you — it's okay to feel that way. Would you like a quick grounding exercise?",
-        "You're not alone. If it helps, tell me one small detail about your day."
-      ];
-      return defaults[Math.floor(Math.random()*defaults.length)];
-    }
+function mapMoodVal(k){
+  // mapping: angry 1, sad 2, anxious 3, okay 4, happy 5
+  const map = { angry:1, sad:2, anxious:3, okay:4, happy:5, calm:4 };
+  return map[k] || 3;
+}
 
-    // initial render
-    renderHistory();
-    renderChat();
+function updateChart(){
+  const arr = read(LS.MOODS, []).slice(0,30).reverse();
+  // draw simple sparkline-like bars for mood
+  ctx.clearRect(0,0,chartCanvas.width,chartCanvas.height);
+  const w = chartCanvas.width; const h = chartCanvas.height;
+  if(arr.length===0){
+    ctx.fillStyle='#063046'; ctx.font='14px Poppins'; ctx.fillText('No mood data yet', 12, 26);
+    document.getElementById('insightsBox').innerText = 'No insights yet — start with a check-in.';
+    return;
+  }
+  const padding=10;
+  const stepX = (w - padding*2) / Math.max(1, arr.length-1);
+  ctx.beginPath();
+  for(let i=0;i<arr.length;i++){
+    const v = mapMoodVal(arr[i].key);
+    const x = padding + i*stepX;
+    const y = padding + (5 - v) / 5 * (h - padding*2);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    // draw small circle
+    ctx.fillStyle = (v>=4?'#ff6fa3':'#7be4b8'); ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.fill();
+  }
+  ctx.strokeStyle='#063046'; ctx.lineWidth=2; ctx.stroke();
 
-    // support pressing Enter to send (Shift+Enter for newline)
-    chatInput.addEventListener('keydown', (e)=>{
-      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat.click(); }
-    });
+  // insights: counts and avg
+  const counts = {}; arr.forEach(a=> counts[a.key] = (counts[a.key]||0)+1);
+  const total = arr.length;
+  let summary = Object.keys(counts).map(k=> `${k}: ${counts[k]}`).join(' • ');
+  const avg = (arr.map(a=>mapMoodVal(a.key)).reduce((s,n)=>s+n,0)/arr.length).toFixed(2);
+  document.getElementById('insightsBox').innerHTML = `<div style="font-weight:700">Recent (${total})</div><div class="muted" style="margin-top:6px">${summary}</div><div style="margin-top:6px">Average mood (1-5): ${avg}</div>`;
+}
+updateChart();
 
-    // accessibility: focus chat input on load
-    chatInput.focus();
-  </script>
+/* ---------------------------
+   Music — WebAudio synthesized tracks (no external files)
+   --------------------------- */
+let audioCtx=null, masterGain=null, nodes=[];
+let isPlaying=false;
+const eqBars = document.querySelectorAll('#equalizer > div');
+
+function initAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain(); masterGain.gain.value = 0.5; masterGain.connect(audioCtx.destination);
+  // load saved
+  const pref = read(LS.MUSIC, {track:0, vol:50});
+  document.getElementById('trackSelect').value = pref.track || 0;
+  document.getElementById('volRange').value = pref.vol || 50;
+  setVolume(pref.vol || 50);
+  document.getElementById('musicFloat').style.display='flex';
+  animateEq();
+}
+function setVolume(v){ if(masterGain) masterGain.gain.setValueAtTime((v/100), audioCtx.currentTime||0); }
+function stopNodes(){ nodes.forEach(n=>{ try{ if(n.stop) n.stop(); if(n.disconnect) n.disconnect(); if(n._interval) clearInterval(n._interval);}catch(e){} }); nodes=[]; isPlaying=false; document.getElementById('playToggle').innerText='Play'; }
+
+document.getElementById('playToggle').addEventListener('click', ()=>{ if(!audioCtx) initAudio(); if(!isPlaying){ startTrack(parseInt(document.getElementById('trackSelect').value)); } else stopNodes(); });
+document.getElementById('trackSelect').addEventListener('change', ()=>{ if(isPlaying) startTrack(parseInt(document.getElementById('trackSelect').value)); write(LS.MUSIC,{track:parseInt(document.getElementById('trackSelect').value), vol:document.getElementById('volRange').value}); });
+document.getElementById('volRange').addEventListener('input', ()=>{ setVolume(parseInt(document.getElementById('volRange').value)); write(LS.MUSIC,{track:parseInt(document.getElementById('trackSelect').value), vol:document.getElementById('volRange').value}); });
+
+function startTrack(idx){
+  stopNodes();
+  isPlaying=true; document.getElementById('playToggle').innerText='Pause';
+  if(idx===0) piano(); if(idx===1) waves(); if(idx===2) rain(); if(idx===3) birds();
+  write(LS.MUSIC,{track:idx, vol:document.getElementById('volRange').value});
+}
+
+/* small eq animation */
+function animateEq(){
+  setInterval(()=>{ eqBars.forEach((b,i)=>{ const h = isPlaying ? (8 + Math.round(Math.random()*36)) : (6 + Math.round(Math.random()*10)); b.style.height = h + 'px'; }); }, 180);
+}
+
+/* Synth implementations (lightweight) */
+function piano(){
+  const now = audioCtx.currentTime;
+  const melody = [523.25, 587.33, 659.25, 783.99, 880.00];
+  for(let i=0;i<6;i++){
+    const f = melody[Math.floor(Math.random()*melody.length)] * (Math.random()<0.2?0.5:1);
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type='sine'; o.frequency.value = f;
+    g.gain.value = 0;
+    o.connect(g); g.connect(masterGain);
+    o.start(now + i*0.9);
+    g.gain.linearRampToValueAtTime(0.12, now + i*0.9 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.9 + 2.6);
+    o.stop(now + i*0.9 + 3.0);
+    nodes.push(o);
+  }
+  const t = setTimeout(()=>{ if(isPlaying) piano(); }, 6*900 + 200);
+  nodes.push({_interval:t});
+}
+function waves(){
+  const bufferSize = audioCtx.sampleRate * 2;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1)*0.6;
+  const src = audioCtx.createBufferSource(); src.buffer = buffer; src.loop = true;
+  const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900;
+  const g = audioCtx.createGain(); g.gain.value=0.12;
+  const lfo = audioCtx.createOscillator(); const lfoGain = audioCtx.createGain();
+  lfo.frequency.value = 0.06; lfoGain.gain.value=0.12; lfo.connect(lfoGain); lfoGain.connect(g.gain);
+  src.connect(lp); lp.connect(g); g.connect(masterGain);
+  src.start(0); lfo.start(0); nodes.push(src,lfo,lp,g);
+}
+function rain(){
+  const bufferSize = audioCtx.sampleRate * 1;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0); for(let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1)*0.8;
+  const src = audioCtx.createBufferSource(); src.buffer = buffer; src.loop = true;
+  const bp = audioCtx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=900;
+  const g = audioCtx.createGain(); g.gain.value=0.12;
+  src.connect(bp); bp.connect(g); g.connect(masterGain);
+  src.start(0);
+  const thunderOsc = audioCtx.createOscillator(); const thunderGain = audioCtx.createGain(); thunderGain.gain.value=0;
+  thunderOsc.type='sine'; thunderOsc.frequency.value=80; thunderOsc.connect(thunderGain); thunderGain.connect(masterGain); thunderOsc.start(0);
+  const id = setInterval(()=>{ if(!isPlaying) return; thunderGain.gain.cancelScheduledValues(audioCtx.currentTime); thunderGain.gain.setValueAtTime(0, audioCtx.currentTime); thunderGain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 0.02); thunderGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5); }, 8000 + Math.random()*7000);
+  nodes.push(src,bp,g,thunderOsc,thunderGain,{_interval:id});
+}
+function birds(){
+  let running=true;
+  function chirp(){
+    if(!running || !isPlaying) return;
+    const now = audioCtx.currentTime;
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type='sine'; o.frequency.value = 1000 + Math.random()*1800;
+    g.gain.value = 0.001; o.connect(g); g.connect(masterGain);
+    o.start(now); g.gain.linearRampToValueAtTime(0.12, now + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.6 + Math.random()*0.8);
+    o.stop(now + 1 + Math.random()*0.8);
+    nodes.push(o,g);
+    const next = 800 + Math.random()*2400; const t = setTimeout(()=>{ chirp(); }, next); nodes.push({_interval:t});
+  }
+  chirp();
+  nodes.push({_stop:()=> running=false});
+}
+
+/* ---------------------------
+   Init UI & saved data
+   --------------------------- */
+function initUI(){
+  // show music controls
+  document.getElementById('musicFloat').style.display = 'flex';
+  // render saved chat, vents
+  renderChat(); renderVents(); updateChart();
+  // set track & vol from storage (but don't autoplay)
+  const pref = read(LS.MUSIC, {track:0, vol:50});
+  document.getElementById('trackSelect').value = pref.track || 0;
+  document.getElementById('volRange').value = pref.vol || 50;
+}
+
+/* ---------------------------
+   Helpers & load
+   --------------------------- */
+function renderChat(){ const msgs = read(LS.CHAT,[]); const win=document.getElementById('chatWindow'); win.innerHTML=''; msgs.forEach(m=>{ const d=document.createElement('div'); d.className='msg '+(m.who==='user'?'user':'bot'); d.innerHTML = `<div class="who">${m.who==='user'?'You':'Friend'}</div><div class="bubble ${m.who==='user'?'user':'bot'}" style="margin-top:6px">${escapeHtml(m.text)}</div>`; win.appendChild(d); }); win.scrollTop = win.scrollHeight; }
+function renderVents(){ const list = read(LS.VENTS,[]); const root=document.getElementById('ventList'); root.innerHTML=''; list.slice().reverse().forEach(v=>{ const e=document.createElement('div'); e.className='journal-entry'; e.style.padding='8px'; e.style.borderRadius='8px'; e.style.background='linear-gradient(180deg,#fff,#f7f7ff)'; e.style.color='#063046'; e.style.boxShadow='0 6px 18px rgba(3,32,60,0.06)'; e.innerHTML = `<div style="font-size:12px;color:${'#6b7280'}">${new Date(v.ts).toLocaleString()}</div><div style="margin-top:6px">${escapeHtml(v.text)}</div>`; root.appendChild(e); }); }
+
+/* ---------------------------
+   Startup
+   --------------------------- */
+initUI();
+
+</script>
 </body>
 </html>
